@@ -1,3 +1,4 @@
+using Nextplorer.Infrastructure;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -5,89 +6,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shell;
 
-namespace Nextplorer.src.Presentation
+namespace Nextplorer.Presentation
 {
-    public static class ThemeModel
-    {
-        private static Palette m_current = Palette.Dark;
-        public static Palette Current
-        {
-            get => m_current;
-            set
-            {
-                m_current = value;
-                Apply(value);
-            }
-        }
-
-        public static void Apply(Palette palette)
-        {
-            WindowHeader.Color = palette.WindowHeader;
-            WindowContent.Color = palette.WindowContent;
-            Text.Color = palette.Text;
-        }
-
-        public static SolidColorBrush WindowHeader { get; private set; }
-        public static SolidColorBrush WindowContent { get; private set; }
-        public static SolidColorBrush Text { get; private set; }
-
-        static ThemeModel()
-        {
-            WindowHeader = new SolidColorBrush(Color.FromRgb(0x1E, 0x1E, 0x1E));
-            WindowContent = new SolidColorBrush(Color.FromRgb(0x17, 0x17, 0x17));
-            Text = new SolidColorBrush(Colors.WhiteSmoke);
-        }
-
-        public sealed class Palette
-        {
-            public Color WindowHeader { get; private set; }
-            public Color WindowContent { get; private set; }
-            public Color Text { get; private set; }
-
-            public static Palette Dark = new()
-            {
-                WindowHeader = Color.FromRgb(0x1E, 0x1E, 0x1E),
-                WindowContent = Color.FromRgb(0x17, 0x17, 0x17),
-                Text = Colors.WhiteSmoke,
-            };
-
-            public static Palette Light = new()
-            {
-                WindowHeader = Color.FromRgb(0xF0, 0xF0, 0xF0),
-                WindowContent = Color.FromRgb(0xFF, 0xFF, 0xFF),
-                Text = Colors.Black,
-            };
-        }
-    }
-
-    public sealed class View
-    {
-        private List<Tab> m_tabs;
-        private TabControl m_control;
-
-        public int Count => m_tabs.Count;
-
-        public TabControl Control => m_control;
-
-        public View(TabControl control)
-        {
-            m_tabs = new();
-            m_control = control;
-        }
-
-        public void Add(Tab target)
-        {
-            m_tabs.Add(target);
-            m_control.Items.Add(target.Item);
-        }
-
-        public void Remove(Tab target)
-        {
-            m_control.Items.Remove(target.Item);
-            m_tabs.Remove(target);
-        }
-    }
-
     public sealed class Tab
     {
         private string m_current;
@@ -146,11 +66,14 @@ namespace Nextplorer.src.Presentation
         {
             m_instance = target;
 
+            target.Background = Brushes.Transparent;
+            target.AllowsTransparency = true;
+            target.WindowStyle = WindowStyle.None;
+
             m_chrome = new()
             {
                 CaptionHeight = 40.0,
                 ResizeBorderThickness = new(7.0),
-                GlassFrameThickness = new(1.0),
             };
             WindowChrome.SetWindowChrome(target, m_chrome);
 
@@ -226,6 +149,13 @@ namespace Nextplorer.src.Presentation
             };
             Grid.SetRow(_windowContent, 1);
 
+            var _clip = new RectangleGeometry()
+            {
+                Rect = new(0, 0, target.Width, target.Height),
+                RadiusX = 10.0,
+                RadiusY = 10.0,
+            };
+
             var _windowGrid = new Grid()
             {
                 RowDefinitions =
@@ -238,6 +168,15 @@ namespace Nextplorer.src.Presentation
                     _windowHeader,
                     _windowContent,
                 },
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                VerticalAlignment = VerticalAlignment.Stretch,
+                Clip = _clip,
+            };
+
+            //target.Clip = _clip;
+            target.SizeChanged += (_, _) =>
+            {
+                _clip.Rect = new(0, 0, target.Width, target.Height);
             };
 
             target.Content = _windowGrid;
@@ -252,8 +191,9 @@ namespace Nextplorer.src.Presentation
         {
             s_instances.Remove(this);
             m_instance.Close();
-            m_chrome = null;
-            m_view = null;
+            m_instance = null!;
+            m_chrome = null!;
+            m_view = null!;
         }
 
         #region window handler
@@ -295,6 +235,7 @@ namespace Nextplorer.src.Presentation
 
             var _controller = Float(this);
             _controller.View.Add(_target);
+            _controller.m_instance.Title = _item.Name;
 
             var _point = m_instance.PointToScreen(e.GetPosition(m_instance));
             _controller.m_instance.Left = _point.X;
@@ -320,7 +261,7 @@ namespace Nextplorer.src.Presentation
             var _path = (string)_item.Tag;
             if (Directory.Exists(_path))
             {
-                string[] _contents = null;
+                string[] _contents = null!;
 
                 try
                 {

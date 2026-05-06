@@ -1,5 +1,3 @@
-﻿using System.Configuration;
-using System.Data;
 using System.Windows;
 
 namespace Nextplorer
@@ -7,8 +5,14 @@ namespace Nextplorer
     /// <summary>
     /// Interaction logic for App.xaml
     /// </summary>
-    public partial class App : Application
+    public partial class App
+        : Application
     {
-    }
+        //private static Mutex s_mutex;
 
+        public App()
+        {
+            //s_mutex = new Mutex(false, "");
+        }
+    }
 }
