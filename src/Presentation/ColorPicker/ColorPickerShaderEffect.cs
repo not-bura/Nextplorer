@@ -6,23 +6,50 @@ namespace Nextplorer.Presentation
 {
     public class ColorPickerShaderEffect : ShaderEffect
     {
-        private static PixelShader s_triangleShader;
-        private static PixelShader s_rectangleShader;
-        private static PixelShader s_colorRingShader;
+        private static PixelShader s_triangleShader = null!;
+        private static PixelShader s_rectangleShader = null!;
+        private static PixelShader s_colorRingShader = null!;
+
+        private static PixelShader triangleShader
+        {
+            get
+            {
+                s_triangleShader ??= LoadTriangle();
+                return s_triangleShader;
+            }
+        }
+
+        private static PixelShader rectangleShader
+        {
+            get
+            {
+                s_rectangleShader ??= LoadRectangle();
+                return s_rectangleShader;
+            }
+        }
+
+        private static PixelShader colorRingShader
+        {
+            get
+            {
+                s_colorRingShader ??= LoadColorRing();
+                return s_colorRingShader;
+            }
+        }
 
         public static ColorPickerShaderEffect Triangle()
         {
-            return new(LoadTriangle());
+            return new(triangleShader);
         }
 
         public static ColorPickerShaderEffect Rectangle()
         {
-            return new(LoadRectangle());
+            return new(rectangleShader);
         }
 
         public static ColorPickerShaderEffect ColorRing()
         {
-            return new(LoadColorRing());
+            return new(colorRingShader);
         }
 
         private ColorPickerShaderEffect(PixelShader shader)
